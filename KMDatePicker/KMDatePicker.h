@@ -13,7 +13,8 @@ typedef NS_ENUM(NSUInteger, KMDatePickerStyle) {
     KMDatePickerStyleYearMonthDayHourMinute,
     KMDatePickerStyleYearMonthDay,
     KMDatePickerStyleMonthDayHourMinute,
-    KMDatePickerStyleHourMinute
+    KMDatePickerStyleHourMinute,
+    KMDatePickerStyleYearMonth
 };
 
 @protocol KMDatePickerDelegate;
@@ -25,7 +26,14 @@ typedef NS_ENUM(NSUInteger, KMDatePickerStyle) {
 @property (nonatomic, strong) NSDate *defaultLimitedDate; ///< 默认限制时间；默认值为最小限制时间，当选择时间不在指定范围，就滚动到此默认限制时间
 @property (nonatomic, strong) NSDate *scrollToDate; ///< 滚动到指定时间；默认值为当前时间
 
+@property (nonatomic,strong)UIView *bgView;
+@property (nonatomic,strong)UIView *pickMianView;
+
 - (instancetype)initWithFrame:(CGRect)frame delegate:(id<KMDatePickerDelegate>)delegate datePickerStyle:(KMDatePickerStyle)datePickerStyle;
+
+- (void)showInView:(UIView *)backView; //显示
+
+- (void)dismissSelf;
 
 @end
 

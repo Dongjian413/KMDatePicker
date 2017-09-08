@@ -19,7 +19,9 @@
 #define kRowNormalStatusColor [UIColor blackColor]
 #define kWidthOfTotal self.frame.size.width
 #define kHeightOfButtonContentView 35.0
-#define kButtonNormalStatusColor [UIColor colorWithRed:0.0 green:0.5 blue:1.0 alpha:1.0]
+#define kButtonNormalStatusColor [UIColor whiteColor]
+
+#define kDatePiker_ShowAnimationTime 0.3
 
 @interface KMDatePicker () {
     UIPickerView *_pikV;
@@ -42,30 +44,39 @@
     NSInteger _dayIndex;
     NSInteger _hourIndex;
     NSInteger _minuteIndex;
+    
+    // 是否需要重新加载数据
+    BOOL _needRefreshData;
 }
 
 @end
 
 @implementation KMDatePicker
 
-- (instancetype)init {
-    if (self = [super init]) {
-        self.backgroundColor = [UIColor whiteColor];
-    }
-    return self;
-}
-
-- (instancetype)initWithFrame:(CGRect)frame {
-    if (self = [super initWithFrame:frame]) {
-        self.backgroundColor = [UIColor whiteColor];
-    }
-    return self;
-}
+//- (instancetype)init {
+//    if (self = [super init]) {
+//        self.backgroundColor = [UIColor whiteColor];
+//    }
+//    return self;
+//}
+//
+//- (instancetype)initWithFrame:(CGRect)frame {
+//    if (self = [super initWithFrame:frame]) {
+//        self.backgroundColor = [UIColor whiteColor];
+//    }
+//    return self;
+//}
 
 - (instancetype)initWithFrame:(CGRect)frame delegate:(id<KMDatePickerDelegate>)delegate datePickerStyle:(KMDatePickerStyle)datePickerStyle {
-    _delegate = delegate;
-    _datePickerStyle = datePickerStyle;
-    return [self initWithFrame:frame];
+    
+    if (self = [super initWithFrame:frame]) {
+        _delegate = delegate;
+        _datePickerStyle = datePickerStyle;
+        _bgView = [[UIView alloc] initWithFrame:frame];
+        [self layoutSelf];
+    }
+    
+    return self;
 }
 
 #pragma mark - 重写属性
@@ -74,7 +85,27 @@
     if (_minLimitedDate && !_defaultLimitedDate) {
         _defaultLimitedDate = _minLimitedDate;
     }
+    if (_needRefreshData) [self loadData];
 }
+
+- (void)setMaxLimitedDate:(NSDate *)maxLimitedDate
+{
+    _maxLimitedDate = maxLimitedDate;
+    if (_needRefreshData) [self loadData];
+}
+
+- (void)setScrollToDate:(NSDate *)scrollToDate
+{
+    _scrollToDate = scrollToDate;
+    if (_needRefreshData) [self loadData];
+}
+
+- (void)setDefaultLimitedDate:(NSDate *)defaultLimitedDate
+{
+    _defaultLimitedDate = defaultLimitedDate;
+    if (_needRefreshData) [self loadData];
+}
+
 
 #pragma mark - 自定义方法
 - (void)addUnitLabel:(NSString *)text withPointX:(CGFloat)pointX {
@@ -88,7 +119,7 @@
     lblUnit.layer.shadowColor = [[UIColor whiteColor] CGColor];
     lblUnit.layer.shadowOpacity = 0.5;
     lblUnit.layer.shadowRadius = 5.0;
-    [self addSubview:lblUnit];
+    [self.pickMianView addSubview:lblUnit];
 }
 
 - (NSUInteger)daysOfMonth {
@@ -197,8 +228,15 @@
                          ];
             break;
         }
+        case KMDatePickerStyleYearMonth: {
+            arrIndex = @[
+                         [NSNumber numberWithInteger:_yearIndex],
+                         [NSNumber numberWithInteger:_monthIndex]
+                         ];
+            break;
+        }
     }
-
+    
     for (NSUInteger i=0, len=arrIndex.count; i<len; i++) {
         [_pikV selectRow:[arrIndex[i] integerValue] inComponent:i animated:YES];
     }
@@ -222,8 +260,7 @@
 }
 
 - (void)cancel:(UIButton *)sender {
-    UIViewController *delegateVC = (UIViewController *)self.delegate;
-    [delegateVC.view endEditing:YES];
+    [self dismissSelf];
 }
 
 - (void)scrollToNowDateIndexPosition:(UIButton *)sender {
@@ -259,9 +296,9 @@
     NSDate *date = [DateHelper dateFromString:dateStr withFormat:nil];
     
     NSString *minDateStr = [NSString stringWithFormat:@"%@-%@-01 00:00",
-                         _datePickerDateMinLimited.year,
-                         _datePickerDateMinLimited.month
-                         ];
+                            _datePickerDateMinLimited.year,
+                            _datePickerDateMinLimited.month
+                            ];
     
     if ([date compare:[DateHelper dateFromString:minDateStr withFormat:nil]] == NSOrderedAscending ||
         [date compare:_maxLimitedDate] == NSOrderedDescending) {
@@ -348,15 +385,17 @@
 }
 
 #pragma mark - 绘制内容
-- (void)drawRect:(CGRect)rect {
-    // 加载数据
-    [self loadData];
+- (void)layoutSelf {
+    
+    self.pickMianView = [[UIView alloc] initWithFrame:CGRectMake(0, self.frame.size.height, [UIScreen mainScreen].bounds.size.width, 216)];
+    self.pickMianView.backgroundColor = [UIColor whiteColor];
     
     // 初始化头部按钮（取消、现在时间、确定）
     UIView *buttonContentView = [[UIView alloc] initWithFrame:CGRectMake(-2.0, 0.0, kWidthOfTotal + 4.0, kHeightOfButtonContentView)];
     buttonContentView.layer.borderColor = [UIColor lightGrayColor].CGColor;
     buttonContentView.layer.borderWidth = 0.5;
-    [self addSubview:buttonContentView];
+    buttonContentView.backgroundColor = [UIColor blueColor];
+    [self.pickMianView addSubview:buttonContentView];
     
     UIButton *btnCancel = [UIButton buttonWithType:UIButtonTypeCustom];
     btnCancel.frame = CGRectMake(2.0, 2.5, 60.0, kHeightOfButtonContentView - 5.0);
@@ -392,16 +431,13 @@
     
     // 初始化选择器视图控件
     if (!_pikV) {
-        _pikV = [[UIPickerView alloc]initWithFrame:CGRectMake(0.0, kHeightOfButtonContentView, kWidthOfTotal, self.frame.size.height - kHeightOfButtonContentView)];
+        _pikV = [[UIPickerView alloc]initWithFrame:CGRectMake(0.0, kHeightOfButtonContentView, kWidthOfTotal, self.pickMianView.frame.size.height- kHeightOfButtonContentView)];
         _pikV.showsSelectionIndicator = YES;
         _pikV.backgroundColor = [UIColor clearColor];
-        [self addSubview:_pikV];
+        [self.pickMianView addSubview:_pikV];
     }
     _pikV.dataSource = self;
     _pikV.delegate = self;
-    
-    // 初始化滚动到指定时间位置
-    [self scrollToDateIndexPosition];
 }
 
 #pragma mark - 执行 KMDatePickerDelegate 委托代理协议方法，用于回调传递参数
@@ -429,6 +465,10 @@
             break;
         }
         case KMDatePickerStyleHourMinute: {
+            numberOfComponents = 2;
+            break;
+        }
+        case KMDatePickerStyleYearMonth: {
             numberOfComponents = 2;
             break;
         }
@@ -501,6 +541,18 @@
             }
             break;
         }
+        case KMDatePickerStyleYearMonth: {
+            switch (component) {
+                case 0:
+                    numberOfRows = _mArrYear.count;
+                    break;
+                case 1:
+                    numberOfRows = kMonthCountOfEveryYear;
+                    break;
+            }
+            break;
+        }
+            
     }
     return numberOfRows;
 }
@@ -593,6 +645,22 @@
             }
             break;
         }
+        case KMDatePickerStyleYearMonth: {
+            widthOfAverage = (kWidthOfTotal - 10.0) / 2;
+            switch (component) {
+                case 0:
+                    width = widthOfAverage + 20.0;
+                    [self addUnitLabel:@"年" withPointX:width/2 + 24.0];
+                    break;
+                case 1:
+                    width = widthOfAverage;
+                    [self addUnitLabel:@"月" withPointX:(widthOfAverage + 20.0) + width/2 + 16.0];
+                    break;
+            }
+            break;
+            
+        }
+            
     }
     return width;
 }
@@ -686,6 +754,19 @@
             }
             break;
         }
+        case KMDatePickerStyleYearMonth: {
+            switch (component) {
+                case 0:
+                    text = _mArrYear[row];
+                    break;
+                case 1:
+                    text = _mArrMonth[row];
+                    textColor = [self monthRowTextColor:row];
+                    break;
+            }
+            break;
+        }
+            
     }
     lblCustom.text = text;
     lblCustom.textColor = textColor;
@@ -693,6 +774,9 @@
 }
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component {
+    
+    NSString *dateStr = nil;
+    NSString *format = nil;
     switch (_datePickerStyle) {
         case KMDatePickerStyleYearMonthDayHourMinute: {
             switch (component) {
@@ -718,6 +802,15 @@
                     _dayIndex = _mArrDay.count-1;
                 }
             }
+            format = @"yyyy-MM-dd HH:mm";
+            dateStr = [NSString stringWithFormat:@"%@-%@-%@ %@:%@",
+                       _mArrYear[_yearIndex],
+                       _mArrMonth[_monthIndex],
+                       _mArrDay[_dayIndex],
+                       _mArrHour[_hourIndex],
+                       _mArrMinute[_minuteIndex]
+                       ];
+            
             break;
         }
         case KMDatePickerStyleYearMonthDay: {
@@ -738,6 +831,11 @@
                     _dayIndex = _mArrDay.count-1;
                 }
             }
+            format = @"yyyy-MM-dd";
+            dateStr = [NSString stringWithFormat:@"%@-%@-%@",
+                       _mArrYear[_yearIndex],
+                       _mArrMonth[_monthIndex],
+                       _mArrDay[_dayIndex]];
             break;
         }
         case KMDatePickerStyleMonthDayHourMinute: {
@@ -761,6 +859,13 @@
                     _dayIndex = _mArrDay.count-1;
                 }
             }
+            format = @"MM-dd HH:mm";
+            dateStr = [NSString stringWithFormat:@"%@-%@ %@:%@",
+                       _mArrMonth[_monthIndex],
+                       _mArrDay[_dayIndex],
+                       _mArrHour[_hourIndex],
+                       _mArrMinute[_minuteIndex]
+                       ];
             break;
         }
         case KMDatePickerStyleHourMinute: {
@@ -772,27 +877,100 @@
                     _minuteIndex = row;
                     break;
             }
+            format = @"HH:mm";
+            dateStr = [NSString stringWithFormat:@"%@:%@",
+                       _mArrHour[_hourIndex],
+                       _mArrMinute[_minuteIndex]
+                       ];
             break;
         }
+        case KMDatePickerStyleYearMonth: {
+            switch (component) {
+                case 0:
+                    _yearIndex = row;
+                    break;
+                case 1:
+                    _monthIndex = row;
+                    break;
+            }
+            format = @"yyyy-MM";
+            dateStr = [NSString stringWithFormat:@"%@-%@",
+                       _mArrYear[_yearIndex],
+                       _mArrMonth[_monthIndex]];
+            break;
+        }
+        default:
+            break;
     }
     
-    NSString *dateStr = [NSString stringWithFormat:@"%@-%@-%@ %@:%@",
-                         _mArrYear[_yearIndex],
-                         _mArrMonth[_monthIndex],
-                         _mArrDay[_dayIndex],
-                         _mArrHour[_hourIndex],
-                         _mArrMinute[_minuteIndex]
-                         ];
-    _scrollToDate = [DateHelper dateFromString:dateStr withFormat:nil];
+    _scrollToDate = [DateHelper dateFromString:dateStr withFormat:format];
     _datePickerDateScrollTo = [[KMDatePickerDateModel alloc] initWithDate:_scrollToDate];
     
-    // 为了区别最大最小限制范围外行的标签颜色，这里需要重新加载所有组件列
+    //为了区别最大最小限制范围外行的标签颜色，这里需要重新加载所有组件列
     [pickerView reloadAllComponents];
     
-    // 如果选择时间不在最小和最大限制时间范围内就滚动到有效的默认范围内
-    if (!_scrollToDate || ![self validatedDate:_scrollToDate]) {
+    //如果选择时间不在最小和最大限制时间范围内就滚动到有效的默认范围内
+    if (![self validatedDate:_scrollToDate]) {
         [self scrollToDateIndexPositionWithDate:_defaultLimitedDate];
     }
+}
+
+#pragma mark - 执行动画
+- (void)showInView:(UIView *)backView{
+    
+    [self addSubView];
+    [backView addSubview:self];
+    
+    if (!_needRefreshData) {
+        // 加载数据
+        [self loadData];
+        [_pikV reloadAllComponents];
+        // 初始化滚动到指定时间位置
+        [self scrollToDateIndexPosition];
+        // 在创建完成并显示过后，若再次修改属性则需要重新加载数据
+        _needRefreshData = YES;
+    }
+    
+    CGRect rect = [UIScreen mainScreen].bounds;
+    [UIView animateWithDuration:kDatePiker_ShowAnimationTime animations:^{
+        self.pickMianView.frame = CGRectMake(0, rect.size.height - 216, rect.size.width, 216);
+    }];
+}
+
+//添加视图
+- (void)addSubView
+{
+    self.bgView.alpha = 0.4;
+    self.bgView.backgroundColor = [UIColor blackColor];
+    self.pickMianView.alpha = 1;
+    
+    UITapGestureRecognizer *tapBlank = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(hiddenMine:)];
+    [self.bgView addGestureRecognizer:tapBlank];
+    
+    [self addSubview:self.bgView];
+    [self addSubview:self.pickMianView];
+}
+
+- (void)dismissSelf{
+    
+    CGRect rect = [UIScreen mainScreen].bounds;
+    [UIView animateWithDuration:kDatePiker_ShowAnimationTime animations:^{
+        self.pickMianView.frame = CGRectMake(0, rect.size.height, [UIScreen mainScreen].bounds.size.width, 216);
+        self.pickMianView.alpha = 0;
+    } completion:^(BOOL finished) {
+        [self removeSelf];
+    }];
+}
+
+- (void)removeSelf{
+    
+    [self removeFromSuperview];
+    
+}
+
+//点击空白消失
+- (void)hiddenMine:(UITapGestureRecognizer *)tap{
+    [self dismissSelf];
 }
 
 @end

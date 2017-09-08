@@ -15,6 +15,7 @@
 @property (nonatomic, weak) IBOutlet UITextField *txtFYearMonthDayHourMinute;
 @property (nonatomic, weak) IBOutlet UITextField *txtFMonthDayHourMinute;
 @property (nonatomic, weak) IBOutlet UITextField *txtFYearMonthDay;
+@property (weak, nonatomic) IBOutlet UITextField *txtFYearMonth;
 @property (nonatomic, weak) IBOutlet UITextField *txtFHourMinute;
 @property (nonatomic, weak) IBOutlet UITextField *txtFLimitedDate;
 

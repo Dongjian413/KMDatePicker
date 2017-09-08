@@ -188,7 +188,7 @@
 				TargetAttributes = {
 					F9F5D5FF1BC40D1A004035C8 = {
 						CreatedOnToolsVersion = 7.0;
-						DevelopmentTeam = R7N88J7F7X;
+						DevelopmentTeam = 6STP9MNWBT;
 					};
 					F9F5D6181BC40D1A004035C8 = {
 						CreatedOnToolsVersion = 7.0;
@@ -374,6 +374,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = BrandAsset;
+				DEVELOPMENT_TEAM = 6STP9MNWBT;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -393,6 +394,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = BrandAsset;
+				DEVELOPMENT_TEAM = 6STP9MNWBT;
 				ENABLE_BITCODE = NO;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
