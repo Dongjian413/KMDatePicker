@@ -32,7 +32,6 @@ typedef NS_ENUM(NSUInteger, KMDatePickerStyle) {
 - (instancetype)initWithFrame:(CGRect)frame delegate:(id<KMDatePickerDelegate>)delegate datePickerStyle:(KMDatePickerStyle)datePickerStyle;
 
 - (void)showInView:(UIView *)backView; //显示
-
 - (void)dismissSelf;
 
 @end

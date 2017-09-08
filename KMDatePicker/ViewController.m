@@ -14,7 +14,6 @@
 {
     KMDatePicker *datePicker;
     NSMutableArray *datePickerArray;
-    
 }
 - (void)layoutUI;
 @end
