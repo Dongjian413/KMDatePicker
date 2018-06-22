@@ -124,7 +124,7 @@
 
 - (NSUInteger)daysOfMonth {
     NSString *dateStr = [NSString stringWithFormat:@"%@-%@-01 00:00", _mArrYear[_yearIndex], _mArrMonth[_monthIndex]];
-    return [[DateHelper dateFromString:dateStr withFormat:@"yyyy-MM-dd HH:mm"] daysOfMonth];
+    return [[DateHelper dateFromString:dateStr withFormat:@"yyyy-MM-dd HH:mm"] km_daysOfMonth];
 }
 
 - (void)reloadDayArray {
@@ -974,3 +974,4 @@
 }
 
 @end
+

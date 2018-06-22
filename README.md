@@ -15,15 +15,15 @@
 
 iPhone 5s
 
- ![ScreenShot_iPhone 5s](https://github.com/KenmuHuang/KMDatePicker/blob/master/ScreenShot/ScreenShot_iPhone 5s.gif)
+ ![ScreenShot_iPhone_5s](https://github.com/KenmuHuang/KMDatePicker/blob/master/ScreenShot/ScreenShot_iPhone_5s.gif)
 
 iPhone 6
 
- ![ScreenShot_iPhone 6](https://github.com/KenmuHuang/KMDatePicker/blob/master/ScreenShot/ScreenShot_iPhone 6.gif)
+ ![ScreenShot_iPhone_6](https://github.com/KenmuHuang/KMDatePicker/blob/master/ScreenShot/ScreenShot_iPhone_6.gif)
 
 iPhone 6 Plus
 
- ![ScreenShot_iPhone 6 Plus](https://github.com/KenmuHuang/KMDatePicker/blob/master/ScreenShot/ScreenShot_iPhone 6 Plus.gif)
+ ![ScreenShot_iPhone_6Plus](https://github.com/KenmuHuang/KMDatePicker/blob/master/ScreenShot/ScreenShot_iPhone_6Plus.gif)
 
 
 
@@ -115,6 +115,16 @@ iPhone 6 Plus
     _txtFMonthDayHourMinute.tag = 103;
     _txtFHourMinute.delegate = self;
     _txtFHourMinute.tag = 104;
+    
+    //年月日时分；限制时间范围
+    datePicker = [[KMDatePicker alloc]
+                  initWithFrame:rect
+                  delegate:self
+                  datePickerStyle:KMDatePickerStyleYearMonthDayHourMinute];
+    datePicker.minLimitedDate = [[DateHelper localeDate] km_addMonthAndDay:-24 days:0];
+    datePicker.maxLimitedDate = [datePicker.minLimitedDate km_addMonthAndDay:48 days:0];
+    _txtFLimitedDate.inputView = datePicker;
+
     _txtFLimitedDate.delegate = self;
     _txtFLimitedDate.tag = 105;
 }
